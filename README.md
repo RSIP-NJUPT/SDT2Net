@@ -1,1 +1,1 @@
-# SDT-2-Net
+# SDT<sup>2</sup>Net
