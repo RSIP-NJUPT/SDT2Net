@@ -40,7 +40,7 @@ Users can load the pretrained model we trained in this article to make fine-tuni
 ## Evaluation
 We provide the discovered compression rates in the [compression_rate.json](https://github.com/anonymous998899/DiffRate/blob/main/compression_rate.json) file. To evaluate these rates, utilize the `--load_compression_rate` option, which will load the appropriate compression rate from [compression_rate.json](https://github.com/anonymous998899/DiffRate/blob/main/compression_rate.json) based on the specified `model` and `target_flops`. An example evaluating the `DeiT-S` model with `4.5G` FLOPs would be:
 ```
-python main.py --eval --load_compression_rate --data-path $path_to_imagenet$ --model vit_deit_small_patch16_224 --target_flops 2.9
+python main.py --eval --load_compression_rate --data-path $path_to_imagenet$ --model vit_deit_small_patch16_224 --target_flops 4.5
 ```
 
 ## Training
