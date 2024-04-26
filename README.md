@@ -4,7 +4,8 @@ This a official Pytorch implementation of our paper "[Remote Sensing Scene Class
 
 ## What SDT<sup>2</sup>Net Does
 ![pipline](figures/SDT2Net.png)
-Abstract...
+The vision transformer has been widely applied in remote sensing image scene classification due to its excellent ability to capture global features. However, remote sensing scene images involve challenges such as scene complexity and small inter-class differences. Directly utilizing the global tokens of transformer for feature learning may increase computational
+complexity. Therefore, constructing a distinguishable transformer network which adaptively selects tokens can effectively improve the classification performance of remote sensing scene images while considering computational complexity. Based on this, a second-order differentiable token transformer network (SDT<sup>2</sup>Net) is proposed for considering the efficacy of distinguishable statistical features and non-redundant learnable tokens of remote sensing scene images. A novel transformer block, including an efficient attention block (EAB) and differentiable token compression (DTC) mechanism, is inserted into SDT<sup>2</sup>Net for acquiring selectable token features of each scene image guided by sparse shift local features and token compression rate learning style. Furthermore, a fast token fusion (FTF) module is developed for acquiring more distinguishable token feature representations. This module utilizes the fast global covariance pooling algorithm to acquire high-order visual tokens and validates the effectiveness of classification tokens and high-order visual tokens for scene classification. Compared with other recent methods, SDT<sup>2</sup>Net achieves the most advanced performance with comparable FLOPs (Floating Point OperationsPer Second).
 
 ## Requirements
 ```
@@ -32,16 +33,8 @@ NWPU-RESISC45
 
 ## Pre-Trained Models
 
-Users can load the pretrained model we trained in this article to make fine-tuning. Of course, our proposed SDT<sup>2</sup>Net can be operated utilizing the pre-trained models of DeiT. To facilitate seamless integration, our code is programmed to automatically download and load these pre-trained models. However, users who prefer manual downloads can acquire the pre-trained DeiT models through this [link](https://github.com/facebookresearch/deit/blob/main/README_deit.md).
+Users can load the pretrained model we trained in this article to make fine-tuning. Of course, our proposed SDT<sup>2</sup>Net can be operated utilizing the pre-trained models of DeiT. The pretrained model is located under the path `./model/pretrain/`.
 
- 
-
-
-## Evaluation
-We provide the discovered compression rates in the [compression_rate.json](https://github.com/anonymous998899/DiffRate/blob/main/compression_rate.json) file. To evaluate these rates, utilize the `--load_compression_rate` option, which will load the appropriate compression rate from [compression_rate.json](https://github.com/anonymous998899/DiffRate/blob/main/compression_rate.json) based on the specified `model` and `target_flops`. An example evaluating the `DeiT-S` model with `4.5G` FLOPs would be:
-```
-python main.py --eval --load_compression_rate --data-path $path_to_imagenet$ --model vit_deit_small_patch16_224 --target_flops 4.5
-```
 
 ## Training
 
@@ -52,10 +45,10 @@ python main.py \
 --epoch 100 --batch-size 64 \
 --data-path $path_to_imagenet$ \
 --output_dir $path_to_save_log$ \
---model vit_deit_small_patch16_224 \
+--model vit_deit_SDT2Net_small_patch16_224 \
 --target_flops 4.5
 ```
-- supported `$model_name$`: `{vit_deit_tiny_patch16_224,vit_deit_small_patch16_224,vit_deit_base_patch16_224}`
+
 - supported `$target_flops$`: a floating point number
 
 ## Citation
@@ -70,4 +63,4 @@ If you use SDT<sup>2</sup>Net or this repository in your work, please cite:
 ```
 
 ## Acknowledge
-This codebase borrow some code from [DeiT](https://github.com/facebookresearch/deit). Thanks for their wonderful work.
+This codebase borrow some code from [DeiT](https://github.com/facebookresearch/deit) and [DiffRate](https://github.com/OpenGVLab/DiffRate). Thanks for their wonderful work.

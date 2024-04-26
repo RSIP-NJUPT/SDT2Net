@@ -8,6 +8,7 @@ import torch
 from timm.data import Mixup
 from timm.utils import accuracy
 import utils
+import numpy as np
 
 def train_one_epoch(model: torch.nn.Module, criterion,
                     data_loader: Iterable, optimizer: torch.optim.Optimizer,
@@ -89,6 +90,9 @@ def evaluate(data_loader, model, device,logger=None):
         images = images.to(device, non_blocking=True)
         target = target.to(device, non_blocking=True)
 
+        start_event, end_event = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
+        start_event.record()
+
         # compute output
         with torch.cuda.amp.autocast():
             output, flops = model(images)
@@ -102,7 +106,7 @@ def evaluate(data_loader, model, device,logger=None):
         metric_logger.update(loss=loss.item())
         metric_logger.meters['acc1'].update(acc1.item(), n=batch_size)
         metric_logger.meters['acc5'].update(acc5.item(), n=batch_size)
-
+    
     if hasattr(model, 'module'):
         prune_kept_num, merge_kept_num = model.module.get_kept_num()
     else:

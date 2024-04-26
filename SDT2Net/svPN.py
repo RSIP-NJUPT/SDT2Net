@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from MPN import Triuvec
+from SDT2Net.MPN import Triuvec
 from torch.autograd import Function
 import numpy as np
 

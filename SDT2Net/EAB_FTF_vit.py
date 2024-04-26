@@ -11,8 +11,8 @@ from timm.models.helpers import load_pretrained
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 from timm.models.resnet import resnet26d, resnet50d
 from timm.models.registry import register_model
-from classifier import Classifier
-from eab_block import EAB
+from SDT2Net.classifier import Classifier
+from SDT2Net.eab_block import EAB
 
 def _cfg(url='', **kwargs):
     return {
@@ -259,7 +259,7 @@ class VisionTransformer(nn.Module):
                 ),
             ),
         )
-        self.classifier = Classifier(num_classes=num_classes, input_dim=self.embed_dim, representationConfig=representationConfig)  # fast
+        self.classifier = Classifier(num_classes=num_classes, input_dim=self.embed_dim, representationConfig=representationConfig)
 
         trunc_normal_(self.pos_embed, std=.02)
         trunc_normal_(self.cls_token, std=.02)
@@ -301,6 +301,7 @@ class VisionTransformer(nn.Module):
 
     def forward(self, x):
         x = self.forward_features(x)
+        # the FTF module
         cls_head = self.head(x[:, 0])
         vis_head = self.classifier(x)
         x = cls_head + vis_head

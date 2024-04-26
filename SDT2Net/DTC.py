@@ -45,7 +45,6 @@ class DiffRate(nn.Module):
         return token_probability
     
     def get_token_mask(self, token_number=None):
-        # self.update_kept_token_number()
         token_probability = self.get_token_probability()
         # translate probability to 0/1 mask
         token_mask = torch.ones_like(token_probability)

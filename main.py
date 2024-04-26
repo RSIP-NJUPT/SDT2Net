@@ -23,7 +23,6 @@ import warnings
 from utils import MultiEpochsDataLoader
 from timm.scheduler.cosine_lr import CosineLRScheduler
 import SDT2Net
-
 warnings.filterwarnings('ignore')
 
 
@@ -33,7 +32,7 @@ def get_args_parser():
     parser.add_argument('--epochs', default=100, type=int)
 
     # Model parameters
-    parser.add_argument('--model', default='vit_deit_small_patch16_224', type=str, metavar='MODEL',
+    parser.add_argument('--model', default='vit_deit_SDT2Net_small_patch16_224', type=str, metavar='MODEL',
                         help='Name of model to train')
     parser.add_argument('--multi-reso', default=False, action='store_true',help='')
     parser.add_argument('--input-size', default=224, type=int, help='images input size')
@@ -81,7 +80,7 @@ def get_args_parser():
     parser.add_argument('--min-lr', type=float, default=1e-5, metavar='LR',
                         help='lower lr bound for cyclic schedulers that hit 0 (1e-5)')
     parser.add_argument('--arch-min-lr', type=float, default=0.01, metavar='LR',
-                        help='lower lr bound for cyclic schedulers that hit 0 (0.001)')
+                        help='lower lr bound for cyclic schedulers that hit 0 (0.01)')
 
     parser.add_argument('--decay-epochs', type=float, default=30, metavar='N',
                         help='epoch interval to decay LR')
@@ -142,7 +141,7 @@ def get_args_parser():
                         choices=['kingdom', 'phylum', 'class', 'order', 'supercategory', 'family', 'genus', 'name'],
                         type=str, help='semantic granularity')
 
-    parser.add_argument('--output_dir', default='./log/temp',
+    parser.add_argument('--output_dir', default='./log/temp/',
                         help='path where to save, empty for no saving')
     parser.add_argument('--device', default='cuda',
                         help='device to use for training / testing')
@@ -169,7 +168,6 @@ def get_args_parser():
 
     parser.add_argument('--target_flops', type=float, default=4.5)
     parser.add_argument('--granularity', type=int, default=4, help='the token number gap between each compression rate candidate')
-    parser.add_argument('--load_compression_rate', action='store_true', default=False, help='eval by exiting compression rate in compression_rate.json')
     parser.add_argument('--warmup_compression_rate', action='store_true', default=False, help='inactive computational constraint in first epoch')
     return parser
 
@@ -195,7 +193,7 @@ def main(args):
     dataset_train, args.nb_classes = build_dataset(is_train=True, args=args)
     dataset_val, _ = build_dataset(is_train=False, args=args)
 
-    if True:  # args.distributed:
+    if args.distributed:
         num_tasks = utils.get_world_size()
         global_rank = utils.get_rank()
         if args.repeated_aug:
@@ -263,20 +261,7 @@ def main(args):
     else:
         raise ValueError("only support deit in this codebase")
     
-    model_name_dict = {
-        'vit_deit_tiny_patch16_224':'ViT-T-DeiT',
-        'vit_deit_small_patch16_224':'ViT-S-DeiT',
-        'vit_deit_base_patch16_224': 'ViT-B-DeiT',
-    }
-    if args.load_compression_rate:
-        with open('compression_rate.json', 'r') as f:
-            compression_rate = json.load(f) 
-            model_name = model_name_dict[args.model]
-            if not str(args.target_flops) in compression_rate[model_name]:
-                raise ValueError(f"compression_rate.json does not contaion {model_name} with {args.target_flops}G flops")
-            prune_kept_num = eval(compression_rate[model_name][str(args.target_flops)]['prune_kept_num'])
-            merge_kept_num = eval(compression_rate[model_name][str(args.target_flops)]['merge_kept_num'])
-            model.set_kept_num(prune_kept_num, merge_kept_num)
+    model_name_dict = {'vit_deit_SDT2Net_small_patch16_224':'ViT-S-DeiT'}
 
     if args.finetune:
         if args.finetune.startswith('https'):
@@ -315,10 +300,10 @@ def main(args):
 
     model.to(device)
 
-    model_without_dtc = model
+    model_without_ddp = model
     if args.distributed:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
-        model_without_dtc = model.module
+        model_without_ddp = model.module
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
     logger.info(f'number of params: {n_parameters}')
 
@@ -329,8 +314,9 @@ def main(args):
     if args.eval:
         test_stats = evaluate(data_loader_val, model, device,logger)
         logger.info(f"Accuracy of the network on the {len(dataset_val)} test images: {test_stats['acc1']:.1f}%")
+        return
 
-    optimizer = torch.optim.AdamW(model_without_dtc.arch_parameters(), lr=args.arch_lr,weight_decay=0)
+    optimizer = torch.optim.AdamW(model_without_ddp.arch_parameters(), lr=args.arch_lr,weight_decay=0)
     loss_scaler = utils.NativeScalerWithGradNormCount()
     lr_scheduler = CosineLRScheduler(optimizer, t_initial=args.epochs, lr_min=args.arch_min_lr, decay_rate=args.decay_rate )
 
@@ -352,7 +338,7 @@ def main(args):
                 args.resume, map_location='cpu', check_hash=True)
         else:
             checkpoint = torch.load(args.resume, map_location='cpu')
-        model_without_dtc.load_state_dict(checkpoint['model'], strict=False)
+        model_without_ddp.load_state_dict(checkpoint['model'], strict=False)
         if not args.eval and 'optimizer' in checkpoint and 'lr_scheduler' in checkpoint and 'epoch' in checkpoint:
             optimizer.load_state_dict(checkpoint['optimizer'])
             lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
@@ -382,7 +368,7 @@ def main(args):
             checkpoint_paths = [output_dir / 'checkpoint.pth']
             for checkpoint_path in checkpoint_paths:
                 utils.save_on_master({
-                    'model': model_without_dtc.state_dict(),
+                    'model': model_without_ddp.state_dict(),
                     'optimizer': optimizer.state_dict(),
                     'lr_scheduler': lr_scheduler.state_dict(),
                     'epoch': epoch,

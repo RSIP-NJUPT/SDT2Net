@@ -128,7 +128,7 @@ class SDTAttention(Attention):
             qkv[1],
             qkv[2],
         )
-        # EAB block and FTF module is in the EAB_FTF_vit.py
+        # EAB block and FTF module is in the EAB_FTF_vit.py for pretrained model
         attn = (q @ k.transpose(-2, -1)) * self.scale
 
         # Apply proportional attention

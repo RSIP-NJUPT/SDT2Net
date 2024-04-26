@@ -1,10 +1,6 @@
-import torch
 import torch.nn as nn
-from PadeSqt import PadeSqt
-import MPN
-import svPN
-from covariance import Covariance
-
+from SDT2Net.PadeSqt import PadeSqt
+from SDT2Net.covariance import Covariance
 
 class Classifier(nn.Module):
     def __init__(self,num_classes=1000, input_dim=384, representationConfig={}):
@@ -13,13 +9,7 @@ class Classifier(nn.Module):
         normConfig = representationConfig['normalization']
         if self.re_type == 'second-order':
             self.representation = Covariance(**representationConfig['args'])
-            if normConfig['type'] == 'svPN':
-                self.normalization = svPN(**normConfig['args'])
-            elif normConfig['type'] == 'MPN':
-                if representationConfig['args']['cov_type'] == 'cross':
-                    raise TypeError('Cross-covraiance is not supported when using MPN')
-                self.normalization = MPN(**normConfig['args'])
-            elif normConfig['type'] == 'PadeSqt':
+            if normConfig['type'] == 'PadeSqt':
                 self.normalization = PadeSqt(**normConfig['args'])
             else:
                 raise TypeError('{:} is not implemented'.format(normConfig['type']))
