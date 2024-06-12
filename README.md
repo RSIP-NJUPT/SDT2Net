@@ -1,5 +1,5 @@
 # SDT<sup>2</sup>Net
-This a official Pytorch implementation of our paper "[Remote Sensing Scene Classification via Second-order Differentiable Token Transformer Network](https://)"
+This a official Pytorch implementation of our paper "[Remote Sensing Scene Classification via Second-order Differentiable Token Transformer Network](https://ieeexplore.ieee.org/document/10542965)"
 
 
 ## What SDT<sup>2</sup>Net Does
@@ -54,12 +54,15 @@ python main.py \
 ## Citation
 If you use SDT<sup>2</sup>Net or this repository in your work, please cite:
 ```
-@article{,
-  title={},
-  author={},
-  journal={},
-  year={2024}
-}
+@ARTICLE{10542965,
+  author={Ni, Kang and Wu, Qianqian and Li, Sichan and Zheng, Zhizhong and Wang, Peng},
+  journal={IEEE Transactions on Geoscience and Remote Sensing}, 
+  title={Remote Sensing Scene Classification via Second-Order Differentiable Token Transformer Network}, 
+  year={2024},
+  volume={62},
+  number={},
+  pages={1-15},
+  doi={10.1109/TGRS.2024.3407879}}
 ```
 
 ## Acknowledge
